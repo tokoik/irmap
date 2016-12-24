@@ -1,0 +1,38 @@
+#
+# for Linux
+#
+/irmap/irmap
+a.out
+core
+*.o
+*.dep
+#
+# for Mac
+#
+.DS_Store
+xcuserdata
+/DerivedData/
+#
+# for Windows
+#
+.vs/
+Debug/
+Release/
+x64/
+/packages/
+Thumbs.db
+*.com
+*.exe
+*.VC.VC.opendb
+*.VC.db
+#
+# anothre stuff
+#
+*~
+*.bak
+*.tmp
+*.swp
+/irmap/*.obj
+/irmap/*.mtl
+!/irmap/bunny.obj
+!/irmap/bunny.mtl
