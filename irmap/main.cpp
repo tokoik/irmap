@@ -92,6 +92,15 @@ int main()
   // フレームバッファオブジェクトにデプスバッファを組み込む
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth, 0);
 
+  // 遅延レンダリングに用いる矩形を作成する
+  const auto rectangle([] { GLuint vao; glGenVertexArrays(1, &vao); return vao; } ());
+
+  // 遅延レンダリングを行うシェーダを読み込む
+  const auto pass2(ggLoadShader("pass2.vert", "pass2.frag"));
+
+  // uniform 変数の場所を得る
+  const auto colorLoc(glGetUniformLocation(pass2, "color"));
+
   // ウィンドウが開いている間繰り返す
   while (!window.shouldClose())
   {
@@ -122,6 +131,28 @@ int main()
 
     // 図形を描画する
     object.draw(simple);
+
+    // 通常のフレームバッファに描画する
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // ビューポートを設定する
+    window.setViewport();
+
+    // 隠面消去を行わない
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    // 遅延レダリングを行うシェーダの使用を開始する
+    glUseProgram(pass2);
+
+    // カラーバッファに使ったテクスチャを指定する
+    glUniform1i(colorLoc, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, color);
+
+    // 矩形を描く
+    glBindVertexArray(rectangle);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     // カラーバッファを入れ替えてイベントを取り出す
     window.swapBuffers();

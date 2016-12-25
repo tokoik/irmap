@@ -41,5 +41,11 @@
     <None Include="pass1.vert">
       <Filter>シェーダー ファイル</Filter>
     </None>
+    <None Include="pass2.frag">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="pass2.vert">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>

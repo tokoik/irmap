@@ -31,6 +31,8 @@
 		7D868C981E0EA62B00E15E3A /* gg.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; path = gg.h; sourceTree = "<group>"; };
 		7D868C9B1E0EA63000E15E3A /* Window.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; path = Window.h; sourceTree = "<group>"; };
 		7D868C9C1E0EA64800E15E3A /* pass1.frag */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; path = pass1.frag; sourceTree = "<group>"; };
+		7DAD99181E0FBF3D00F35471 /* pass2.frag */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; path = pass2.frag; sourceTree = "<group>"; };
+		7DAD99191E0FBF3D00F35471 /* pass2.vert */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; path = pass2.vert; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,8 @@
 				7D868C9B1E0EA63000E15E3A /* Window.h */,
 				7D2594C41E1007B8003EEB23 /* pass1.vert */,
 				7D868C9C1E0EA64800E15E3A /* pass1.frag */,
+				7DAD99191E0FBF3D00F35471 /* pass2.vert */,
+				7DAD99181E0FBF3D00F35471 /* pass2.frag */,
 			);
 			path = irmap;
 			sourceTree = "<group>";

@@ -153,6 +153,8 @@
     <None Include="packages.config" />
     <None Include="pass1.frag" />
     <None Include="pass1.vert" />
+    <None Include="pass2.frag" />
+    <None Include="pass2.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
