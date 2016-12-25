@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <vector>
 
 // ウィンドウ関連の処理
 #include "Window.h"
@@ -71,7 +72,14 @@ int main()
   glClearColor(background[0], background[1], background[2], background[3]);
 
   // フレームバッファオブジェクトのカラーバッファに用いるテクスチャを作成する
-  const auto color(createTexture(GL_RGBA, fboWidth, fboHeight));
+  std::vector<GLuint> color;
+  color.push_back(createTexture(GL_RGBA, fboWidth, fboHeight));   // アルベド
+  color.push_back(createTexture(GL_RGBA, fboWidth, fboHeight));   // フレネル項
+  color.push_back(createTexture(GL_RGB32F, fboWidth, fboHeight)); // 位置
+  color.push_back(createTexture(GL_RGB32F, fboWidth, fboHeight)); // 法線
+
+  // カラーバッファの数
+  const auto colorCount(static_cast<int>(color.size()));
 
   // フレームバッファオブジェクトのデプスバッファに用いるテクスチャ (デプスマップ) を作成する
   const auto depth([] { GLuint t; glGenTextures(1, &t); return t; } ());
@@ -86,8 +94,18 @@ int main()
   const auto fbo([] { GLuint f; glGenFramebuffers(1, &f); return f; } ());
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-  // フレームバッファオブジェクトにカラーバッファを組み込む
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color, 0);
+  // レンダーターゲット
+  std::vector<GLenum> target;
+
+  for (int i = 0; i < colorCount; ++i)
+  {
+    // フレームバッファオブジェクトにカラーバッファを組み込む
+    const GLenum attachment(GL_COLOR_ATTACHMENT0 + i);
+    glFramebufferTexture(GL_FRAMEBUFFER, attachment, color[i], 0);
+
+    // カラーバッファを組み込んだアタッチメントを保存しておく
+    target.push_back(attachment);
+  }
 
   // フレームバッファオブジェクトにデプスバッファを組み込む
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth, 0);
@@ -100,12 +118,19 @@ int main()
 
   // uniform 変数の場所を得る
   const auto colorLoc(glGetUniformLocation(pass2, "color"));
+  const auto lambLoc(glGetUniformLocation(pass2, "lamb"));
+  const auto ldiffLoc(glGetUniformLocation(pass2, "ldiff"));
+  const auto lspecLoc(glGetUniformLocation(pass2, "lspec"));
+  const auto lposLoc(glGetUniformLocation(pass2, "lpos"));
 
   // ウィンドウが開いている間繰り返す
   while (!window.shouldClose())
   {
     // フレームバッファオブジェクトに描画する
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // レンダーターゲットを指定する
+    glDrawBuffers(static_cast<GLsizei>(target.size()), target.data());
 
     // フレームバッファオブジェクトに対するビューポートを設定する
     glViewport(0, 0, fboWidth, fboHeight);
@@ -123,9 +148,6 @@ int main()
     // 図形描画用のシェーダプログラムの使用を開始する
     simple.use();
 
-    // 光源を設定する
-    simple.setLight(light);
-
     // 変換行列を設定する
     simple.loadMatrix(mp, mv * window.getLeftTrackball());
 
@@ -134,6 +156,9 @@ int main()
 
     // 通常のフレームバッファに描画する
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // バックバッファを指定する
+    glDrawBuffer(GL_BACK);
 
     // ビューポートを設定する
     window.setViewport();
@@ -146,9 +171,18 @@ int main()
     glUseProgram(pass2);
 
     // カラーバッファに使ったテクスチャを指定する
-    glUniform1i(colorLoc, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, color);
+    for (int i = 0; i < colorCount; ++i)
+    {
+      glUniform1i(colorLoc + i, i);
+      glActiveTexture(GL_TEXTURE0 + i);
+      glBindTexture(GL_TEXTURE_2D, color[i]);
+    }
+
+    // 光源を設定する
+    glUniform4fv(lambLoc, 1, light.ambient);
+    glUniform4fv(ldiffLoc, 1, light.diffuse);
+    glUniform4fv(lspecLoc, 1, light.specular);
+    glUniform4fv(lposLoc, 1, light.position);
 
     // 矩形を描く
     glBindVertexArray(rectangle);

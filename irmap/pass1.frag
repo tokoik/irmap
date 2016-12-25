@@ -4,14 +4,8 @@
 //
 // pass1.frag
 //
-//   画素単位に陰影付けを行うシェーダ
+//   マルチプルレンダーターゲットに描画するシェーダ
 //
-
-// 光源
-uniform vec4 lamb;                                    // 環境光成分
-uniform vec4 ldiff;                                   // 拡散反射光成分
-uniform vec4 lspec;                                   // 鏡面反射光成分
-uniform vec4 lpos;                                    // 位置
 
 // 材質
 uniform vec4 kamb;                                    // 環境光の反射係数
@@ -24,21 +18,15 @@ in vec4 p;                                            // 頂点の位置
 in vec3 n;                                            // 頂点の法線
 
 // フレームバッファに出力するデータ
-layout (location = 0) out vec4 fc;                    // フラグメントの色
+layout (location = 0) out vec4 color;
+layout (location = 1) out vec4 fresnel;
+layout (location = 2) out vec3 position;
+layout (location = 3) out vec3 normal;
 
 void main(void)
 {
-  // 陰影
-  vec3 v = normalize(p.xyz / p.w);                    // 視線ベクトル
-  vec3 l = normalize((lpos * p.w - p * lpos.w).xyz);  // 光線ベクトル
-  vec3 h = normalize(l - v);                          // 中間ベクトル
-
-  // 拡散反射光成分
-  vec4 idiff = max(dot(n, l), 0.0) * kdiff * ldiff + kamb * lamb;
-
-  // 鏡面反射光成分
-  vec4 ispec = pow(max(dot(n, h), 0.0), kshi) * kspec * lspec;
-
-  // 画素の陰影を求める
-  fc = idiff + ispec;
+  color = vec4(kdiff.rgb, kamb.a);
+  fresnel = vec4(kspec.rgb, kshi * 0.0078125);
+  position = p.xyz / p.w;
+  normal = normalize(n);
 }
