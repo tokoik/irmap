@@ -4,20 +4,8 @@
 //
 // pass1.vert
 //
-//   ’¸“_’PˆÊ‚É‰A‰e•t‚¯‚ğs‚¤ƒVƒF[ƒ_
+//   ‰æ‘f’PˆÊ‚É‰A‰e•t‚¯‚ğs‚¤ƒVƒF[ƒ_
 //
-
-// ŒõŒ¹
-uniform vec4 lamb;                                    // ŠÂ‹«Œõ¬•ª
-uniform vec4 ldiff;                                   // ŠgU”½ËŒõ¬•ª
-uniform vec4 lspec;                                   // ‹¾–Ê”½ËŒõ¬•ª
-uniform vec4 lpos;                                    // ˆÊ’u
-
-// Ş¿
-uniform vec4 kamb;                                    // ŠÂ‹«Œõ‚Ì”½ËŒW”
-uniform vec4 kdiff;                                   // ŠgU”½ËŒW”
-uniform vec4 kspec;                                   // ‹¾–Ê”½ËŒW”
-uniform float kshi;                                   // ‹P‚«ŒW”
 
 // •ÏŠ·s—ñ
 uniform mat4 mw;                                      // ‹“_À•WŒn‚Ö‚Ì•ÏŠ·s—ñ
@@ -29,24 +17,13 @@ layout (location = 0) in vec4 pv;                     // ƒ[ƒJƒ‹À•WŒn‚Å‚Ì’¸“_‚
 layout (location = 1) in vec4 nv;                     // ƒ[ƒJƒ‹À•WŒn‚Å‚Ì’¸“_‚Ì–@ü
 
 // ƒ‰ƒXƒ^ƒ‰ƒCƒU‚É‘—‚é’¸“_‘®«
-out vec4 idiff;                                       // ŠgU”½ËŒõ‹­“x
-out vec4 ispec;                                       // ‹¾–Ê”½ËŒõ‹­“x
+out vec4 p;                                           // ’¸“_‚ÌˆÊ’u
+out vec3 n;                                           // ’¸“_‚Ì–@ü
 
 void main(void)
 {
   gl_Position = mc * pv;
 
-  vec4 p = mw * pv;                                   // ‹“_À•WŒn‚Å‚Ì’¸“_‚ÌˆÊ’u
-  vec3 n = normalize((mg * nv).xyz);                  // ‹“_À•WŒn‚Å‚Ì’¸“_‚Ì–@ü
-
-  // ‰A‰e
-  vec3 v = normalize(p.xyz / p.w);                    // ‹üƒxƒNƒgƒ‹
-  vec3 l = normalize((lpos * p.w - p * lpos.w).xyz);  // ŒõüƒxƒNƒgƒ‹
-  vec3 h = normalize(l - v);                          // ’†ŠÔƒxƒNƒgƒ‹
-
-  // ŠgU”½ËŒõ¬•ª
-  idiff = max(dot(n, l), 0.0) * kdiff * ldiff + kamb * lamb;
-
-  // ‹¾–Ê”½ËŒõ¬•ª
-  ispec = pow(max(dot(n, h), 0.0), kshi) * kspec * lspec;
+  p = mw * pv;                                        // ‹“_À•WŒn‚Å‚Ì’¸“_‚ÌˆÊ’u
+  n = normalize((mg * nv).xyz);                       // ‹“_À•WŒn‚Å‚Ì’¸“_‚Ì–@ü
 }
