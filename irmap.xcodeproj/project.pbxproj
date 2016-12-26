@@ -25,6 +25,8 @@
 
 /* Begin PBXFileReference section */
 		7D2594C41E1007B8003EEB23 /* pass1.vert */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.glsl; path = pass1.vert; sourceTree = "<group>"; };
+		7D7FB1581E11E50100D467B5 /* CamCv.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; path = CamCv.h; sourceTree = "<group>"; };
+		7D7FB1571E11E4F400D467B5 /* Camera.h */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
 		7D868C8D1E0E9F6700E15E3A /* irmap */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = irmap; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D868C901E0E9F6700E15E3A /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		7D868C971E0EA62B00E15E3A /* gg.cpp */ = {isa = PBXFileReference; fileEncoding = 8; lastKnownFileType = sourcecode.cpp.cpp; path = gg.cpp; sourceTree = "<group>"; };
@@ -69,6 +71,8 @@
 				7D868C981E0EA62B00E15E3A /* gg.h */,
 				7D868C971E0EA62B00E15E3A /* gg.cpp */,
 				7D868C9B1E0EA63000E15E3A /* Window.h */,
+				7D7FB1571E11E4F400D467B5 /* Camera.h */,
+				7D7FB1581E11E50100D467B5 /* CamCv.h */,
 				7D2594C41E1007B8003EEB23 /* pass1.vert */,
 				7D868C9C1E0EA64800E15E3A /* pass1.frag */,
 				7DAD99191E0FBF3D00F35471 /* pass2.vert */,
@@ -238,6 +242,8 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_LDFLAGS = (
+					"-lopencv_core",
+					"-lopencv_highgui",
 					"-lglfw3",
 					"-framework",
 					OpenGL,
@@ -260,6 +266,8 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_LDFLAGS = (
+					"-lopencv_core",
+					"-lopencv_highgui",
 					"-lglfw3",
 					"-framework",
 					OpenGL,

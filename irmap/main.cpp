@@ -17,6 +17,18 @@ const GLfloat border[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 // 背景色
 const GLfloat background[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
+// OpenCV によるビデオキャプチャ
+#include "CamCv.h"
+
+// キャプチャに用いるカメラのデバイス番号
+const int captureDevice(0);
+
+// キャプチャするフレームのサイズ (0 ならデフォルト)
+const int captureWidth(1280), captureHeight(720);
+
+// キャプチャするフレームレート (0 ならデフォルト)
+const int captureFps(0);
+
 // 光源
 const GgSimpleShader::Light light =
 {
@@ -48,6 +60,15 @@ GLuint createTexture(GLenum internalFormat, GLsizei width, GLsizei height)
 //
 int main()
 {
+  // カメラの使用を開始する
+  CamCv camera;
+  if (!camera.open(captureDevice, captureWidth, captureHeight, captureFps))
+  {
+    std::cerr << "Can't open capture device.\n";
+    return EXIT_FAILURE;
+  }
+  camera.start();
+
   // ウィンドウを作成する
   Window window(width, height, "realtime irradiance mapping");
 
@@ -110,6 +131,9 @@ int main()
   // フレームバッファオブジェクトにデプスバッファを組み込む
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth, 0);
 
+  // 環境のテクスチャを準備する
+  const auto image(createTexture(GL_RGB, camera.getWidth(), camera.getHeight()));
+
   // 遅延レンダリングに用いる矩形を作成する
   const auto rectangle([] { GLuint vao; glGenVertexArrays(1, &vao); return vao; } ());
 
@@ -118,6 +142,7 @@ int main()
 
   // uniform 変数の場所を得る
   const auto colorLoc(glGetUniformLocation(pass2, "color"));
+  const auto imageLoc(glGetUniformLocation(pass2, "image"));
   const auto lambLoc(glGetUniformLocation(pass2, "lamb"));
   const auto ldiffLoc(glGetUniformLocation(pass2, "ldiff"));
   const auto lspecLoc(glGetUniformLocation(pass2, "lspec"));
@@ -177,6 +202,14 @@ int main()
       glActiveTexture(GL_TEXTURE0 + i);
       glBindTexture(GL_TEXTURE_2D, color[i]);
     }
+
+    // 環境のテクスチャを指定する
+    glUniform1i(imageLoc, colorCount);
+    glActiveTexture(GL_TEXTURE0 + colorCount);
+    glBindTexture(GL_TEXTURE_2D, image);
+
+    // 環境のテクスチャに画像を転送する
+    camera.transmit();
 
     // 光源を設定する
     glUniform4fv(lambLoc, 1, light.ambient);
