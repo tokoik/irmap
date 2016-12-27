@@ -29,14 +29,11 @@ const int captureWidth(1280), captureHeight(720);
 // キャプチャするフレームレート (0 ならデフォルト)
 const int captureFps(0);
 
-// 光源
-const GgSimpleShader::Light light =
-{
-  { 0.2f, 0.2f, 0.2f, 1.0f }, // 環境光成分
-  { 1.0f, 1.0f, 1.0f, 0.0f }, // 拡散反射光成分
-  { 1.0f, 1.0f, 1.0f, 0.0f }, // 鏡面光成分
-  { 0.0f, 0.0f, 1.0f, 0.0f }  // 位置
-};
+// 法線方向のサンプル数
+const GLsizei diffuseSamples(32);
+
+// 法線方向のミップマップのレベル
+const GLint diffuseLod(5);
 
 // テクスチャの作成
 GLuint createTexture(GLenum internalFormat, GLsizei width, GLsizei height)
@@ -48,6 +45,28 @@ GLuint createTexture(GLenum internalFormat, GLsizei width, GLsizei height)
   glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
+
+  return t;
+}
+
+// ミップマップテクスチャの作成
+GLuint createTexture(GLenum internalFormat, GLsizei width, GLsizei height, GLint levels)
+{
+  GLuint t;
+
+  glGenTextures(1, &t);
+  glBindTexture(GL_TEXTURE_2D, t);
+  for (GLint level = 0; level <= levels; ++level)
+  {
+    glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, NULL);
+    width = std::max(1, (width / 2));
+    height = std::max(1, (height / 2));
+  }
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
   glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
@@ -132,7 +151,7 @@ int main()
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth, 0);
 
   // 環境のテクスチャを準備する
-  const auto image(createTexture(GL_RGB, camera.getWidth(), camera.getHeight()));
+  const auto image(createTexture(GL_RGB, camera.getWidth(), camera.getHeight(), diffuseLod));
 
   // 遅延レンダリングに用いる矩形を作成する
   const auto rectangle([] { GLuint vao; glGenVertexArrays(1, &vao); return vao; } ());
@@ -143,10 +162,8 @@ int main()
   // uniform 変数の場所を得る
   const auto colorLoc(glGetUniformLocation(pass2, "color"));
   const auto imageLoc(glGetUniformLocation(pass2, "image"));
-  const auto lambLoc(glGetUniformLocation(pass2, "lamb"));
-  const auto ldiffLoc(glGetUniformLocation(pass2, "ldiff"));
-  const auto lspecLoc(glGetUniformLocation(pass2, "lspec"));
-  const auto lposLoc(glGetUniformLocation(pass2, "lpos"));
+  const auto diffuseSamplesLoc(glGetUniformLocation(pass2, "diffuseSamples"));
+  const auto diffuseLodLoc(glGetUniformLocation(pass2, "diffuseLod"));
 
   // ウィンドウが開いている間繰り返す
   while (!window.shouldClose())
@@ -210,12 +227,13 @@ int main()
 
     // 環境のテクスチャに画像を転送する
     camera.transmit();
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    // 光源を設定する
-    glUniform4fv(lambLoc, 1, light.ambient);
-    glUniform4fv(ldiffLoc, 1, light.diffuse);
-    glUniform4fv(lspecLoc, 1, light.specular);
-    glUniform4fv(lposLoc, 1, light.position);
+    // 法線方向のサンプル点の数を設定する
+    glUniform1i(diffuseSamplesLoc, diffuseSamples);
+
+    // ミップマップのレベルを設定する
+    glUniform1i(diffuseLodLoc, diffuseLod);
 
     // 矩形を描く
     glBindVertexArray(rectangle);
