@@ -28,6 +28,12 @@ uniform int diffuseSamples;
 // 法線方向のミップマップのレベル
 uniform int diffuseLod;
 
+// 正反射方向のサンプル点の数
+uniform int specularSamples;
+
+// 正反射方向のミップマップのレベル
+uniform int specularLod;
+
 // 環境のテクスチャ
 uniform sampler2D image;
 
@@ -185,13 +191,26 @@ void main(void)
     idiff += sample(l, diffuseLod);
   }
 
-  // 正反射方向
-  vec3 r = reflect(v, n);
+  // 鏡面反射の正規化係数
+  float e = 1.0 / (fresnel.a * 128.0 + 1.0);
 
-  // 正反射方向の色
-  vec4 s = sample(r, 0);
+  // 鏡面反射
+  vec4 ispec = vec4(0.0);
+
+  // 正反射側の個々のサンプル点について
+  for (int i = 0; i < specularSamples; ++i)
+  {
+    // サンプル点の生成
+    vec4 s = sampler(seed, e);
+
+    // サンプル点を法線側に回転したものを法線ベクトルに用いて正反射方向を求める
+    vec3 r = reflect(v, m * s.xyz);
+
+    // 正反射側のサンプル点方向の色を累積する
+    ispec += sample(r, specularLod);
+  }
 
   // 画素の陰影を求める
   fresnel.a = 0.0;
-  fc = mix(albedo * idiff / float(diffuseSamples), s, fresnel);
+  fc = mix(albedo * idiff / float(diffuseSamples), ispec / float(specularSamples), fresnel);
 }
