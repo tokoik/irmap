@@ -35,6 +35,12 @@ const GLsizei diffuseSamples(32);
 // 法線方向のミップマップのレベル
 const GLint diffuseLod(5);
 
+// 正反射方向のサンプル数
+const GLsizei specularSamples(16);
+
+// 正反射方向のミップマップのレベル
+const GLint specularLod(3);
+
 // テクスチャの作成
 GLuint createTexture(GLenum internalFormat, GLsizei width, GLsizei height)
 {
@@ -164,6 +170,8 @@ int main()
   const auto imageLoc(glGetUniformLocation(pass2, "image"));
   const auto diffuseSamplesLoc(glGetUniformLocation(pass2, "diffuseSamples"));
   const auto diffuseLodLoc(glGetUniformLocation(pass2, "diffuseLod"));
+  const auto specularSamplesLoc(glGetUniformLocation(pass2, "specularSamples"));
+  const auto specularLodLoc(glGetUniformLocation(pass2, "specularLod"));
 
   // ウィンドウが開いている間繰り返す
   while (!window.shouldClose())
@@ -234,6 +242,12 @@ int main()
 
     // ミップマップのレベルを設定する
     glUniform1i(diffuseLodLoc, diffuseLod);
+
+    // 正反射方向のサンプル点の数を設定する
+    glUniform1i(specularSamplesLoc, specularSamples);
+
+    // 正反射方向のミップマップのレベルを設定する
+    glUniform1i(specularLodLoc, specularLod);
 
     // 矩形を描く
     glBindVertexArray(rectangle);
