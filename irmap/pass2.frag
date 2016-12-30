@@ -22,6 +22,15 @@ layout (location = 0) out vec4 fc;                    // フラグメントの色
 // カラーのレンダーターゲットのテクスチャ
 uniform sampler2D color[4];
 
+// デプスマップ
+uniform sampler2DShadow depth;
+
+// サンプル点の散布半径
+uniform float radius;
+
+// 投影変換行列
+uniform mat4 mp;
+
 // 法線方向のサンプル点の数
 uniform int diffuseSamples;
 
@@ -142,7 +151,8 @@ vec4 sampler(inout uint seed, in float e)
   float d = sqrt(1.0 - z * z);
   float t = 6.2831853 * xorshift(seed);
   vec3 s = normalize(vec3(vec2(cos(t), sin(t)) * d, z));
-  return vec4(s, 0.0);
+  return vec4(s, radius * xorshift(seed));
+  //return vec4(s, radius * pow(xorshift(seed), 0.33333333));
 }
 
 void main(void)
@@ -187,8 +197,14 @@ void main(void)
     // サンプル点を法線側に回転する
     vec3 l = m * d.xyz;
 
-    // 法線側のサンプル点方向の色を累積する
-    idiff += sample(l, diffuseLod);
+    // サンプル点の位置を p からの相対位置に平行移動した後その点のクリッピング座標系上の位置 q を求める
+    vec4 q = mp * vec4(p + l * d.w, 1.0);
+
+    // テクスチャ座標に変換する
+    q = q * 0.5 / q.w + 0.5;
+
+    // q の深度がデプスマップ (depth) の値より小さければ法線側のサンプル点方向の色を累積する
+    idiff += sample(l, diffuseLod) * texture(depth, q.xyz);
   }
 
   // 鏡面反射の正規化係数
@@ -206,8 +222,14 @@ void main(void)
     // サンプル点を法線側に回転したものを法線ベクトルに用いて正反射方向を求める
     vec3 r = reflect(v, m * s.xyz);
 
-    // 正反射側のサンプル点方向の色を累積する
-    ispec += sample(r, specularLod);
+    // サンプル点の位置を p からの相対位置に平行移動した後その点のクリッピング座標系上の位置 q を求める
+    vec4 q = mp * vec4(p + r * s.w, 1.0);
+
+    // テクスチャ座標に変換する
+    q = q * 0.5 / q.w + 0.5;
+
+    // q の深度がデプスマップ (depth) の値より小さければ正反射側のサンプル点方向の色を累積する
+    ispec += sample(r, specularLod) * texture(depth, q.xyz);
   }
 
   // 画素の陰影を求める

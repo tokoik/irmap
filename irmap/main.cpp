@@ -41,6 +41,9 @@ const GLsizei specularSamples(16);
 // 正反射方向のミップマップのレベル
 const GLint specularLod(3);
 
+// サンプル点の散布半径
+const GLfloat radius(0.1f);
+
 // テクスチャの作成
 GLuint createTexture(GLenum internalFormat, GLsizei width, GLsizei height)
 {
@@ -136,6 +139,16 @@ int main()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
+  // 書き込むポリゴンのテクスチャ座標値のＲとテクスチャとの比較を行うようにする
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
+  // もしＲの値がテクスチャの値以下なら真 (すなわち日向)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+  // デプスマップの境界色はデプスの最大値 (1) にする
+  static const GLfloat depthBorder[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, depthBorder);
+
   // フレームバッファオブジェクトを作成する
   const auto fbo([] { GLuint f; glGenFramebuffers(1, &f); return f; } ());
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -168,6 +181,9 @@ int main()
   // uniform 変数の場所を得る
   const auto colorLoc(glGetUniformLocation(pass2, "color"));
   const auto imageLoc(glGetUniformLocation(pass2, "image"));
+  const auto depthLoc(glGetUniformLocation(pass2, "depth"));
+  const auto radiusLoc(glGetUniformLocation(pass2, "radius"));
+  const auto mpLoc(glGetUniformLocation(pass2, "mp"));
   const auto diffuseSamplesLoc(glGetUniformLocation(pass2, "diffuseSamples"));
   const auto diffuseLodLoc(glGetUniformLocation(pass2, "diffuseLod"));
   const auto specularSamplesLoc(glGetUniformLocation(pass2, "specularSamples"));
@@ -248,6 +264,17 @@ int main()
 
     // 正反射方向のミップマップのレベルを設定する
     glUniform1i(specularLodLoc, specularLod);
+
+    // デプスマップを指定する
+    glUniform1i(depthLoc, colorCount + 1);
+    glActiveTexture(GL_TEXTURE0 + colorCount + 1);
+    glBindTexture(GL_TEXTURE_2D, depth);
+
+    // サンプル点の散布半径を設定する
+    glUniform1f(radiusLoc, radius);
+
+    // 投影変換行列を設定する
+    glUniformMatrix4fv(mpLoc, 1, GL_FALSE, mp.get());
 
     // 矩形を描く
     glBindVertexArray(rectangle);
