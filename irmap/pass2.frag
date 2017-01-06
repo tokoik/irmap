@@ -43,6 +43,12 @@ uniform int specularSamples;
 // 正反射方向のミップマップのレベル
 uniform int specularLod;
 
+// ビューポートの中心位置 (s, t) とスクリーンのスケール (p, q)
+uniform vec4 viewport;
+
+// テクスチャの回転変換行列
+uniform mat4 mt;
+
 // 環境のテクスチャ
 uniform sampler2D image;
 
@@ -163,7 +169,12 @@ void main(void)
   // albedo のアルファ値が 0 なら背景色
   if (albedo.a == 0.0)
   {
-    fc = vec4(0.0);
+    // 背景に向かう視線
+    vec3 v = normalize(mat3(mt) * vec3((gl_FragCoord.xy - viewport.st) * viewport.pq, -1.0));
+
+    // 視線の延長方向の色
+    fc = sample(v, 0);
+
     return;
   }
 
@@ -220,7 +231,7 @@ void main(void)
     vec4 s = sampler(seed, e);
 
     // サンプル点を法線側に回転したものを法線ベクトルに用いて正反射方向を求める
-    vec3 r = reflect(v, m * s.xyz);
+    vec3 r = mat3(mt) * reflect(v, m * s.xyz);
 
     // サンプル点の位置を p からの相対位置に平行移動した後その点のクリッピング座標系上の位置 q を求める
     vec4 q = mp * vec4(p + r * s.w, 1.0);

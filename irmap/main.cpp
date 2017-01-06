@@ -188,6 +188,8 @@ int main()
   const auto diffuseLodLoc(glGetUniformLocation(pass2, "diffuseLod"));
   const auto specularSamplesLoc(glGetUniformLocation(pass2, "specularSamples"));
   const auto specularLodLoc(glGetUniformLocation(pass2, "specularLod"));
+  const auto viewportLoc(glGetUniformLocation(pass2, "viewport"));
+  const auto mtLoc(glGetUniformLocation(pass2, "mt"));
 
   // ウィンドウが開いている間繰り返す
   while (!window.shouldClose())
@@ -275,6 +277,15 @@ int main()
 
     // 投影変換行列を設定する
     glUniformMatrix4fv(mpLoc, 1, GL_FALSE, mp.get());
+
+    // ビューポートの中心位置とスクリーンのスケールを指定する
+    const GLfloat centerX(static_cast<GLfloat>(window.getWidth()) * 0.5f);
+    const GLfloat centerY(static_cast<GLfloat>(window.getHeight()) * 0.5f);
+    const GLfloat scale((1.0f + window.getWheel() * 0.05f) / static_cast<GLfloat>(window.getHeight()));
+    glUniform4f(viewportLoc, centerX, centerY, scale, scale);
+
+    // テクスチャの回転行列を設定する
+    glUniformMatrix4fv(mtLoc, 1, GL_FALSE, window.getRightTrackball().get());
 
     // 矩形を描く
     glBindVertexArray(rectangle);
